@@ -1,17 +1,20 @@
-""" repository files and addons.xml generator """
+"""
+    Repository, addons.xml and addons.xml.md5 structural generator
 
-""" Modified by Rodrigo@XMBCHUB to zip plugins/repositories to a "zip" folder """
-""" Modified by BartOtten: create a repository addon, skip folders without addon.xml, user config file """
-""" Modified by Twilight0: zipfile now ignores .idea subdirectories in addons' directories"""
+        Modifications:
 
-""" This file is "as is", without any warranty whatsoever. Use as own risk """
+        - by Rodrigo@TVADDONS to zip plugins/repositories to a "zip" folder
+        - BartOtten: create a repository addon, skip folders without addon.xml, user config file
+        - Twilight0: Ignore .idea subdirectories in addons' directories, changed from md5 module to hashlib
+
+    This file is provided "as is", without any warranty whatsoever. Use as own risk
+"""
 
 import os
-import md5
+import hashlib
 import zipfile
 import shutil
 from xml.dom import minidom
-import glob
 import datetime
 from ConfigParser import SafeConfigParser
 
@@ -95,8 +98,7 @@ class Generator:
             if not os.path.isfile(_path): continue
             try:
                 # skip any file or .git folder
-                if (not os.path.isdir(
-                        addon) or addon == ".git" or addon == self.output_path or addon == self.tools_path):
+                if (not os.path.isdir(addon) or addon == ".git" or addon == self.output_path or addon == self.tools_path):
                     continue
                 # create path
                 _path = os.path.join(addon, "addon.xml")
@@ -128,8 +130,7 @@ class Generator:
 
             if os.path.isfile(self.output_path + addonid + os.path.sep + filename):
                 os.rename(self.output_path + addonid + os.path.sep + filename,
-                          self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime(
-                              "%Y%m%d%H%M%S"))
+                          self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
             shutil.move(filename, self.output_path + addonid + os.path.sep + filename)
         except Exception, e:
             print e
@@ -169,7 +170,7 @@ class Generator:
     def _generate_md5_file(self):
         try:
             # create a new md5 hash
-            m = md5.new(open(self.output_path + "addons.xml").read()).hexdigest()
+            m = hashlib.md5(open(self.output_path + "addons.xml").read()).hexdigest()
             # save file
             self._save_file(m, file=self.output_path + "addons.xml.md5")
         except Exception, e:
