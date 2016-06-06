@@ -1,7 +1,7 @@
 
 """ Modified by Rodrigo@XMBCHUB to zip plugins/repositories to a "zip" folder """
 """ Modified by BartOtten: create a repository addon, skip folders without addon.xml, user config file """
-""" Modified by Twilight0: zipfile now ignores .idea, .git, .svn subdirectories in addons' directories"""
+""" Modified by Twilight0: zipfile now ignores .idea, .git, .svn subdirectories in addons' directories """
 
 """ This file is "as is", without any warranty whatsoever. Use at your own risk """
 
@@ -110,29 +110,27 @@ class Generator:
             except Exception, e:
                 print e
 
-    def _generate_zip_file(self, path, version, addonid):
-        print "Generate zip file for " + addonid + " " + version
-        filename = path + "-" + version + ".zip"
-        try:
-            zip = zipfile.ZipFile(filename, 'w')
-            for root, dirs, files in os.walk(path + os.path.sep):
-                # Remove
-                if ".idea" or ".git" or ".svn" in dirs:
-                    dirs.remove(".idea" and ".git" and ".svn")
-                for file in files:
-                    zip.write(os.path.join(root, file))
-            zip.close()
+            def _generate_zip_file(self, path, version, addonid):
+                print "Generate zip file for " + addonid + " " + version
+                filename = path + "-" + version + ".zip"
+                try:
+                    zip = zipfile.ZipFile(filename, 'w')
+                    for root, dirs, files in os.walk(path + os.path.sep):
+                        for file in files:
+                            zip.write(os.path.join(root, file))
 
-            if not os.path.exists(self.output_path + addonid):
-                os.makedirs(self.output_path + addonid)
+                    zip.close()
 
-            # If old zip exist rename it to same name + time format
-            if os.path.isfile(self.output_path + addonid + os.path.sep + filename):
-                os.rename(self.output_path + addonid + os.path.sep + filename,
-                          self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-            shutil.move(filename, self.output_path + addonid + os.path.sep + filename)
-        except Exception, e:
-            print e
+                if not os.path.exists(self.output_path + addonid):
+                    os.makedirs(self.output_path + addonid)
+
+                if os.path.isfile(self.output_path + addonid + os.path.sep + filename):
+                    os.rename(self.output_path + addonid + os.path.sep + filename,
+                              self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime(
+                                  "%Y%m%d%H%M%S"))
+                shutil.move(filename, self.output_path + addonid + os.path.sep + filename)
+            except Exception, e:
+                print e
 
     def _generate_addons_file(self):
         # addon list
