@@ -1,20 +1,19 @@
+""" repository files and addons.xml generator """
 
 """ Modified by Rodrigo@XMBCHUB to zip plugins/repositories to a "zip" folder """
 """ Modified by BartOtten: create a repository addon, skip folders without addon.xml, user config file """
-""" Modified by Twilight0: zipfile now ignores .idea, .git, .svn subdirectories in addons' directories """
+""" Modified by Twilight0: zipfile now ignores .idea subdirectories in addons' directories"""
 
-""" This file is "as is", without any warranty whatsoever. Use at your own risk """
-
-""" repository files and addons.xml generator """
+""" This file is "as is", without any warranty whatsoever. Use as own risk """
 
 import os
 import md5
 import zipfile
 import shutil
-import datetime
-# import glob
-from ConfigParser import SafeConfigParser
 from xml.dom import minidom
+import glob
+import datetime
+from ConfigParser import SafeConfigParser
 
 
 class Generator:
@@ -49,7 +48,7 @@ class Generator:
 
     def _pre_run(self):
 
-        # create output path if it does not exists
+        # create output  path if it does not exists
         if not os.path.exists(self.output_path):
             os.makedirs(self.output_path)
 
@@ -67,7 +66,6 @@ class Generator:
 
         print "Create repository addon"
 
-        # Parse template file
         with open(self.tools_path + os.path.sep + "template.xml", "r") as template:
             template_xml = template.read()
 
@@ -89,7 +87,7 @@ class Generator:
 
     def _generate_zip_files(self):
         addons = os.listdir(".")
-        # loop through and add each addons addon.xml file
+        # loop thru and add each addons addon.xml file
         for addon in addons:
             # create path
             _path = os.path.join(addon, "addon.xml")
@@ -97,8 +95,9 @@ class Generator:
             if not os.path.isfile(_path): continue
             try:
                 # skip any file or .git folder
-                if (not os.path.isdir(addon) or
-                     addon == ".git" or addon == self.output_path or addon == self.tools_path): continue
+                if (not os.path.isdir(
+                        addon) or addon == ".git" or addon == self.output_path or addon == self.tools_path):
+                    continue
                 # create path
                 _path = os.path.join(addon, "addon.xml")
                 # split lines for stripping
@@ -110,34 +109,37 @@ class Generator:
             except Exception, e:
                 print e
 
-            def _generate_zip_file(self, path, version, addonid):
-                print "Generate zip file for " + addonid + " " + version
-                filename = path + "-" + version + ".zip"
-                try:
-                    zip = zipfile.ZipFile(filename, 'w')
-                    for root, dirs, files in os.walk(path + os.path.sep):
-                        for file in files:
-                            zip.write(os.path.join(root, file))
+    def _generate_zip_file(self, path, version, addonid):
+        print "Generate zip file for " + addonid + " " + version
+        filename = path + "-" + version + ".zip"
+        try:
+            zip = zipfile.ZipFile(filename, 'w')
+            for root, dirs, files in os.walk(path + os.path.sep):
+                if '.idea' in dirs:
+                    dirs.remove('.idea')
+                zip.write(os.path.join(root))
+                for file in files:
+                    zip.write(os.path.join(root, file))
 
-                    zip.close()
+            zip.close()
 
-                if not os.path.exists(self.output_path + addonid):
-                    os.makedirs(self.output_path + addonid)
+            if not os.path.exists(self.output_path + addonid):
+                os.makedirs(self.output_path + addonid)
 
-                if os.path.isfile(self.output_path + addonid + os.path.sep + filename):
-                    os.rename(self.output_path + addonid + os.path.sep + filename,
-                              self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime(
-                                  "%Y%m%d%H%M%S"))
-                shutil.move(filename, self.output_path + addonid + os.path.sep + filename)
-            except Exception, e:
-                print e
+            if os.path.isfile(self.output_path + addonid + os.path.sep + filename):
+                os.rename(self.output_path + addonid + os.path.sep + filename,
+                          self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime(
+                              "%Y%m%d%H%M%S"))
+            shutil.move(filename, self.output_path + addonid + os.path.sep + filename)
+        except Exception, e:
+            print e
 
     def _generate_addons_file(self):
         # addon list
         addons = os.listdir(".")
         # final addons text
         addons_xml = u"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<addons>\n"
-        # loop through and add each addons addon.xml file
+        # loop thru and add each addons addon.xml file
         for addon in addons:
             # create path
             _path = os.path.join(addon, "addon.xml")
@@ -148,7 +150,7 @@ class Generator:
                 xml_lines = open(_path, "r").read().splitlines()
                 # new addon
                 addon_xml = ""
-                # loop through cleaning each line
+                # loop thru cleaning each line
                 for line in xml_lines:
                     # skip encoding format line
                     if (line.find("<?xml") >= 0): continue
