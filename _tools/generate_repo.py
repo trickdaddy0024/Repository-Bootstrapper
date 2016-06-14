@@ -3,9 +3,10 @@
 
         Modifications:
 
-        - by Rodrigo@TVADDONS to zip plugins/repositories to a "zip" folder
-        - BartOtten: create a repository addon, skip folders without addon.xml, user config file
-        - Twilight0: Ignore .idea subdirectories in addons' directories, changed from md5 module to hashlib
+        - by Rodrigo@TVADDONS: Zip plugins/repositories to a "zip" folder
+        - BartOtten: Create a repository addon, skip folders without addon.xml, user config file
+        - Twilight0@TVADDONS: Ignore .idea subdirectories in addons' directories, changed from md5 module to hashlib
+                              copy changelogs, icons and fanarts
 
     This file is provided "as is", without any warranty whatsoever. Use as own risk
 """
@@ -46,6 +47,7 @@ class Generator:
         self._generate_addons_file()
         self._generate_md5_file()
         self._generate_zip_files()
+        self._copy_additional_files()
         # notify user
         print "Finished updating addons xml, md5 files and zipping addons"
 
@@ -65,7 +67,8 @@ class Generator:
         description = self.config.get('addon', 'description')
         url = self.config.get('locations', 'url')
 
-        if os.path.isfile(addonid + os.path.sep + "addon.xml"): return
+        if os.path.isfile(addonid + os.path.sep + "addon.xml"):
+            return
 
         print "Create repository addon"
 
@@ -89,16 +92,18 @@ class Generator:
         self._save_file(repo_xml.encode("utf-8"), file=addonid + os.path.sep + "addon.xml")
 
     def _generate_zip_files(self):
+        global version, addonid
         addons = os.listdir(".")
         # loop thru and add each addons addon.xml file
         for addon in addons:
             # create path
             _path = os.path.join(addon, "addon.xml")
             # skip path if it has no addon.xml
-            if not os.path.isfile(_path): continue
+            if not os.path.isfile(_path):
+                continue
             try:
                 # skip any file or .git folder
-                if (not os.path.isdir(addon) or addon == ".git" or addon == self.output_path or addon == self.tools_path):
+                if not (os.path.isdir(addon) or addon == ".git" or addon == self.output_path or addon == self.tools_path):
                     continue
                 # create path
                 _path = os.path.join(addon, "addon.xml")
@@ -129,13 +134,15 @@ class Generator:
                 os.makedirs(self.output_path + addonid)
 
             if os.path.isfile(self.output_path + addonid + os.path.sep + filename):
+                # pass #uncomment to overwrite existing zip file, then comment or remove the next two lines below
                 os.rename(self.output_path + addonid + os.path.sep + filename,
-                          self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+                    self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
             shutil.move(filename, self.output_path + addonid + os.path.sep + filename)
         except Exception, e:
             print e
 
     def _generate_addons_file(self):
+        print "Generating addons.xml file"
         # addon list
         addons = os.listdir(".")
         # final addons text
@@ -145,7 +152,8 @@ class Generator:
             # create path
             _path = os.path.join(addon, "addon.xml")
             # skip path if it has no addon.xml
-            if not os.path.isfile(_path): continue
+            if not os.path.isfile(_path):
+                continue
             try:
                 # split lines for stripping
                 xml_lines = open(_path, "r").read().splitlines()
@@ -154,7 +162,8 @@ class Generator:
                 # loop thru cleaning each line
                 for line in xml_lines:
                     # skip encoding format line
-                    if (line.find("<?xml") >= 0): continue
+                    if (line.find("<?xml") >= 0):
+                        continue
                     # add line
                     addon_xml += unicode(line.rstrip() + "\n", "utf-8")
                 # we succeeded so add to our final addons.xml text
@@ -168,6 +177,7 @@ class Generator:
         self._save_file(addons_xml.encode("utf-8"), file=self.output_path + "addons.xml")
 
     def _generate_md5_file(self):
+        print "Generating addons.xml.md5 file"
         try:
             # create a new md5 hash
             m = hashlib.md5(open(self.output_path + "addons.xml").read()).hexdigest()
@@ -185,6 +195,31 @@ class Generator:
             # oops
             print "An error occurred saving %s file!\n%s" % (file, e,)
 
+    def _copy_additional_files(self):
+        print "Copying changelogs, fanarts and icons"
+        global version, addonid
+        try:
+            # copy changelogs
+            if not os.path.isfile(self.output_path + addonid + "changelog-" + version + ".txt"):
+                shutil.copy(os.path.join(addonid + os.path.sep + "changelog.txt"), os.path.join(self.output_path + addonid + os.path.sep + "changelog-" + version + ".txt"))
+            elif os.path.isfile(self.output_path + "changelog-" + version + ".txt"):
+                pass
+        except Exception:
+            print "An error occurred while copying changelogs"
+        try:
+            if not os.path.isfile(self.output_path + addonid + "icon.png"):
+                shutil.copy(os.path.join(addonid + os.path.sep + "icon.png"), os.path.join(self.output_path + addonid + os.path.sep + "icon.png"))
+            elif os.path.isfile(self.output_path + "icon.png"):
+                pass
+        except Exception:
+            print "An error occurred while copying icons"
+        try:
+            if not os.path.isfile(self.output_path + addonid + "fanart.jpg"):
+                shutil.copy(os.path.join(addonid + os.path.sep + "fanart.jpg"), os.path.join(self.output_path + addonid + os.path.sep + "fanart.jpg"))
+            elif os.path.isfile(self.output_path + "fanart.jpg"):
+                pass
+        except Exception:
+            print "An error occurred while copying fanarts"
 
 if (__name__ == "__main__"):
     # start
