@@ -1,5 +1,5 @@
 # Repository Bootstrapper
-## _Bootstrap a GIT repo for setting up a Kodi repository_
+## _Bootstrap GIT repo for setting up a Kodi repository_
 
 _forked from BartOtten with the additions of:_
 
