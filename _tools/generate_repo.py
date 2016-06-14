@@ -15,8 +15,8 @@ import os
 import hashlib
 import zipfile
 import shutil
-from xml.dom import minidom
 import datetime
+from xml.dom import minidom
 from ConfigParser import SafeConfigParser
 
 
