@@ -49,7 +49,7 @@ class Generator:
         self._generate_zip_files()
         self._copy_additional_files()
         # notify user
-        print "Finished updating addons xml, md5 files and zipping addons"
+        print "Finished updating addons xml, md5 files, zipping addons and copying additional files"
 
     def _pre_run(self):
 
@@ -198,28 +198,25 @@ class Generator:
     def _copy_additional_files(self):
         print "Copying changelogs, fanarts and icons"
         global version, addonid
+        # copy changelogs
         try:
-            # copy changelogs
-            if not os.path.isfile(self.output_path + addonid + "changelog-" + version + ".txt"):
+            if not os.path.isfile(os.path.join(self.output_path + addonid + os.path.sep + "changelog-" + version + ".txt")):
                 shutil.copy(os.path.join(addonid + os.path.sep + "changelog.txt"), os.path.join(self.output_path + addonid + os.path.sep + "changelog-" + version + ".txt"))
-            elif os.path.isfile(self.output_path + "changelog-" + version + ".txt"):
-                pass
-        except Exception:
-            print "An error occurred while copying changelogs"
+        except:
+            pass
+        # copy icons
         try:
-            if not os.path.isfile(self.output_path + addonid + "icon.png"):
+            if not os.path.isfile(os.path.join(self.output_path + addonid + os.path.sep + "icon.png")):
                 shutil.copy(os.path.join(addonid + os.path.sep + "icon.png"), os.path.join(self.output_path + addonid + os.path.sep + "icon.png"))
-            elif os.path.isfile(self.output_path + "icon.png"):
-                pass
-        except Exception:
-            print "An error occurred while copying icons"
+        except:
+            pass
+        # copy fanarts
         try:
-            if not os.path.isfile(self.output_path + addonid + "fanart.jpg"):
+            if not os.path.isfile(os.path.join(self.output_path + addonid + os.path.sep + "fanart.jpg")):
                 shutil.copy(os.path.join(addonid + os.path.sep + "fanart.jpg"), os.path.join(self.output_path + addonid + os.path.sep + "fanart.jpg"))
-            elif os.path.isfile(self.output_path + "fanart.jpg"):
-                pass
-        except Exception:
-            print "An error occurred while copying fanarts"
+        except:
+            pass
+
 
 if (__name__ == "__main__"):
     # start
