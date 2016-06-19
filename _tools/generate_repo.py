@@ -52,8 +52,6 @@ class Generator:
         self._generate_addons_file()
         self._generate_md5_file()
         self._generate_zip_files()
-        # notify user
-        print "Finished updating addons xml, md5 files, zipping addons and copying additional files"
 
     def _pre_run(self):
 
@@ -99,7 +97,7 @@ class Generator:
                 continue
             try:
                 # skip any file or .git folder
-                if not (os.path.isdir(addon) or addon == ".git" or addon == output_path or addon == tools_path):
+                if not (os.path.isdir(addon) or addon == ".idea" or addon == ".git" or addon == ".svn" or addon == output_path or addon == tools_path):
                     continue
                 # create path
                 _path = os.path.join(addon, "addon.xml")
@@ -197,16 +195,14 @@ class Copier:
         self._copy_additional_files()
 
     def _copy_additional_files(self):
-        print "Copying changelogs, fanarts and icons"
         os.chdir(os.path.abspath(os.path.join(tools_path, os.pardir)))
         addons = os.listdir(".")
         for addon in addons:
             xml_file = os.path.join(addon, "addon.xml")
             if not os.path.isfile(xml_file):
                 continue
-            if not (os.path.isdir(addon) or addon == ".idea" or addon == ".git" or addon == output_path or addon == tools_path):
+            if not (os.path.isdir(addon) or addon == ".idea" or addon == ".git" or addon == ".svn" or addon == output_path or addon == tools_path):
                 continue
-            xml_file = os.path.join(addon, "addon.xml")
             document = minidom.parse(xml_file)
             for parent in document.getElementsByTagName("addon"):
                 version = parent.getAttribute("version")
@@ -235,3 +231,4 @@ class Copier:
 if __name__ == "__main__":
     Generator()
     Copier()
+    print "Finished updating addons xml & md5 files, zipping addons and copying additional files"
