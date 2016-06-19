@@ -20,6 +20,20 @@ from xml.dom import minidom
 from ConfigParser import SafeConfigParser
 
 
+# Load the configuration:
+config = SafeConfigParser()
+config.read('config.ini')
+tools_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__))))
+output_path = "_" + config.get('locations', 'output_path')
+addonid = config.get('addon', 'id')
+name = config.get('addon', 'name')
+version = config.get('addon', 'version')
+author = config.get('addon', 'author')
+summary = config.get('addon', 'summary')
+description = config.get('addon', 'description')
+url = config.get('locations', 'url')
+
+
 class Generator:
     """
         Generates a new addons.xml file from each addons addon.xml file
@@ -29,17 +43,8 @@ class Generator:
 
     def __init__(self):
 
-        """
-        Load the configuration
-        """
-        self.config = SafeConfigParser()
-        self.config.read('config.ini')
-
-        self.tools_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__))))
-        self.output_path = "_" + self.config.get('locations', 'output_path')
-
         # travel path one up
-        os.chdir(os.path.abspath(os.path.join(self.tools_path, os.pardir)))
+        os.chdir(os.path.abspath(os.path.join(tools_path, os.pardir)))
 
         # generate files
         self._pre_run()
@@ -47,32 +52,23 @@ class Generator:
         self._generate_addons_file()
         self._generate_md5_file()
         self._generate_zip_files()
-        self._copy_additional_files()
         # notify user
         print "Finished updating addons xml, md5 files, zipping addons and copying additional files"
 
     def _pre_run(self):
 
         # create output  path if it does not exists
-        if not os.path.exists(self.output_path):
-            os.makedirs(self.output_path)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
 
     def _generate_repo_files(self):
-
-        addonid = self.config.get('addon', 'id')
-        name = self.config.get('addon', 'name')
-        version = self.config.get('addon', 'version')
-        author = self.config.get('addon', 'author')
-        summary = self.config.get('addon', 'summary')
-        description = self.config.get('addon', 'description')
-        url = self.config.get('locations', 'url')
 
         if os.path.isfile(addonid + os.path.sep + "addon.xml"):
             return
 
         print "Create repository addon"
 
-        with open(self.tools_path + os.path.sep + "template.xml", "r") as template:
+        with open(tools_path + os.path.sep + "template.xml", "r") as template:
             template_xml = template.read()
 
         repo_xml = template_xml.format(
@@ -83,7 +79,7 @@ class Generator:
             summary=summary,
             description=description,
             url=url,
-            output_path=self.output_path)
+            output_path=output_path)
 
         # save file
         if not os.path.exists(addonid):
@@ -103,7 +99,7 @@ class Generator:
                 continue
             try:
                 # skip any file or .git folder
-                if not (os.path.isdir(addon) or addon == ".git" or addon == self.output_path or addon == self.tools_path):
+                if not (os.path.isdir(addon) or addon == ".git" or addon == output_path or addon == tools_path):
                     continue
                 # create path
                 _path = os.path.join(addon, "addon.xml")
@@ -130,14 +126,14 @@ class Generator:
 
             zip.close()
 
-            if not os.path.exists(self.output_path + addonid):
-                os.makedirs(self.output_path + addonid)
+            if not os.path.exists(output_path + addonid):
+                os.makedirs(output_path + addonid)
 
-            if os.path.isfile(self.output_path + addonid + os.path.sep + filename):
+            if os.path.isfile(output_path + addonid + os.path.sep + filename):
                 # pass #uncomment to overwrite existing zip file, then comment or remove the next two lines below
-                os.rename(self.output_path + addonid + os.path.sep + filename,
-                    self.output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-            shutil.move(filename, self.output_path + addonid + os.path.sep + filename)
+                os.rename(output_path + addonid + os.path.sep + filename,
+                    output_path + addonid + os.path.sep + filename + "." + datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+            shutil.move(filename, output_path + addonid + os.path.sep + filename)
         except Exception, e:
             print e
 
@@ -174,15 +170,15 @@ class Generator:
         # clean and add closing tag
         addons_xml = addons_xml.strip() + u"\n</addons>\n"
         # save file
-        self._save_file(addons_xml.encode("utf-8"), file=self.output_path + "addons.xml")
+        self._save_file(addons_xml.encode("utf-8"), file=output_path + "addons.xml")
 
     def _generate_md5_file(self):
         print "Generating addons.xml.md5 file"
         try:
             # create a new md5 hash
-            m = hashlib.md5(open(self.output_path + "addons.xml").read()).hexdigest()
+            m = hashlib.md5(open(output_path + "addons.xml").read()).hexdigest()
             # save file
-            self._save_file(m, file=self.output_path + "addons.xml.md5")
+            self._save_file(m, file=output_path + "addons.xml.md5")
         except Exception, e:
             # oops
             print "An error occurred creating addons.xml.md5 file!\n%s" % (e,)
@@ -195,29 +191,46 @@ class Generator:
             # oops
             print "An error occurred saving %s file!\n%s" % (file, e,)
 
+
+class Copier:
+    def __init__(self):
+        self._copy_additional_files()
+
     def _copy_additional_files(self):
         print "Copying changelogs, fanarts and icons"
-        global version, addonid
-        # copy changelogs
-        try:
-            if not os.path.isfile(os.path.join(self.output_path + addonid + os.path.sep + "changelog-" + version + ".txt")):
-                shutil.copy(os.path.join(addonid + os.path.sep + "changelog.txt"), os.path.join(self.output_path + addonid + os.path.sep + "changelog-" + version + ".txt"))
-        except:
-            pass
-        # copy icons
-        try:
-            if not os.path.isfile(os.path.join(self.output_path + addonid + os.path.sep + "icon.png")):
-                shutil.copy(os.path.join(addonid + os.path.sep + "icon.png"), os.path.join(self.output_path + addonid + os.path.sep + "icon.png"))
-        except:
-            pass
-        # copy fanarts
-        try:
-            if not os.path.isfile(os.path.join(self.output_path + addonid + os.path.sep + "fanart.jpg")):
-                shutil.copy(os.path.join(addonid + os.path.sep + "fanart.jpg"), os.path.join(self.output_path + addonid + os.path.sep + "fanart.jpg"))
-        except:
-            pass
+        os.chdir(os.path.abspath(os.path.join(tools_path, os.pardir)))
+        addons = os.listdir(".")
+        for addon in addons:
+            xml_file = os.path.join(addon, "addon.xml")
+            if not os.path.isfile(xml_file):
+                continue
+            if not (os.path.isdir(addon) or addon == ".idea" or addon == ".git" or addon == output_path or addon == tools_path):
+                continue
+            xml_file = os.path.join(addon, "addon.xml")
+            document = minidom.parse(xml_file)
+            for parent in document.getElementsByTagName("addon"):
+                version = parent.getAttribute("version")
+                try:
+                    if os.path.isfile(output_path + addon + os.path.sep + "changelog-" + version + ".txt"):
+                        pass
+                    else:
+                        shutil.copy(addon + os.path.sep + "changelog.txt", output_path + addon + os.path.sep + "changelog-" + version + ".txt")
+                except IOError:
+                    pass
+                try:
+                    if os.path.isfile(output_path + addon + os.path.sep + "icon.png"):
+                        pass
+                    else:
+                        shutil.copy(addon + os.path.sep + "icon.png", output_path + addon + os.path.sep + "icon.png")
+                except IOError:
+                    pass
+                try:
+                    if os.path.isfile(output_path + addon + os.path.sep + "fanart.jpg"):
+                        pass
+                    else:
+                        shutil.copy(addon + os.path.sep + "fanart.jpg", output_path + addon + os.path.sep + "fanart.jpg")
+                except IOError:
+                    pass
 
-
-if (__name__ == "__main__"):
-    # start
-    Generator()
+Generator()
+Copier()
