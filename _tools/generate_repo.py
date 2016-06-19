@@ -232,5 +232,6 @@ class Copier:
                 except IOError:
                     pass
 
+if __name__ == "__main__":
 Generator()
 Copier()
