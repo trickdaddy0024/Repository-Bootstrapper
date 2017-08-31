@@ -8,7 +8,7 @@
         - Twilight0@TVADDONS: Ignore .idea subdirectories in addons' directories, changed from md5 module to hashlib
                               copy changelogs, icons and fanarts
 
-    This file is provided "as is", without any warranty whatsoever. Use as own risk
+    This file is provided "as is", without any warranty whatsoever. Use at your own risk
 """
 
 import os
@@ -114,10 +114,12 @@ class Generator:
         print "Generate zip file for " + addonid + " " + version
         filename = path + "-" + version + ".zip"
         try:
-            zip = zipfile.ZipFile(filename, 'w')
+            zip = zipfile.ZipFile(filename, 'w', compression=zipfile.ZIP_DEFLATED)
             for root, dirs, files in os.walk(path + os.path.sep):
                 if '.idea' in dirs:
                     dirs.remove('.idea')
+                if '.git' in dirs:
+                    dirs.remove('.git')
                 zip.write(os.path.join(root))
                 for file in files:
                     zip.write(os.path.join(root, file))
