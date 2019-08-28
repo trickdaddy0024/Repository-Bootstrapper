@@ -1,3 +1,10 @@
+1.2.1
+- Added the shebang for execution on Linux platform
+- Added the encoding line for backwards compatibility
+- Added script setting for underscore prefix of output path
+- Avoid entering loop in case ignored_files is empty list or None
+- Rename old setting now defaults to False
+
 1.2.0
 - Removed version.txt
 - Added Python 3 support (tested with v.3.6.5)

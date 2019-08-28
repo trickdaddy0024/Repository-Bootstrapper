@@ -7,6 +7,7 @@ _forked from BartOtten with the additions of:_
 - Ignore various files like .gitignore, .gitattributes
 - Copy changelogs (& rename to version number), icons, fanarts to your repository
 - Changed from deprecated md5 module to hashlib
+- Compress zips with deflate method
 
 **In summary, it can do the following:**
 - Create a repository addon which users can install.

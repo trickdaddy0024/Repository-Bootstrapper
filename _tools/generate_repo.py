@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
     Repository, addons.xml and addons.xml.md5 structural generator
 
@@ -18,18 +20,19 @@ import zipfile
 import shutil
 import datetime
 from xml.dom import minidom
+
 try:
     from ConfigParser import SafeConfigParser
 except ImportError:
     from configparser import SafeConfigParser
 
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 # Load the configuration:
 config = SafeConfigParser()
 config.read('config.ini')
 tools_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__))))
-output_path = "_" + config.get('locations', 'output_path')
+output_path = config.get('locations', 'output_path')
 addonid = config.get('addon', 'id')
 name = config.get('addon', 'name')
 version = config.get('addon', 'version')
@@ -41,12 +44,26 @@ url = config.get('locations', 'url')
 # Script settings:
 ask_for_exit_input = True  # asks user to press enter to exit the information window (stdout)
 overwrite_existing = True  # this will overwrite existing zip files in output directory
-rename_old = True  # will rename older zip files in output directory
+rename_old = False  # will rename older zip files in output directory
 copy_additional = True  # will copy additional files such as changelog.txt, icon.png, fanart.jpg
 replace_ampersand = True  # will replace solo ampersands (&) with &amp; in order to pass xml validation
 compress = True  # Setting this to True will compress with ZIP_DEFLATED method, if False it will use ZIP_STORED
-ignored_dirs = ['.git', '.idea', '__MACOSX', '.svn', output_path, tools_path]
-ignored_files = ['.gitignore', 'gitattributes']
+prefix_output = True  # Will prefix output path with an underscore
+
+# Prefix path with underscore in case we need it for quick visual identification of the output path
+if prefix_output:
+    output_path = ''.join(['_', output_path])
+
+# Ignored files and folders:
+ignored_dirs = ['.git', '.idea', '__MACOSX', '.svn', '.vscode']
+ignored_files = ['.gitignore', 'gitattributes', '.gitkeep', '.github']
+
+
+if ignored_dirs:
+    ignored_dirs.extend([output_path, tools_path])
+else:
+    ignored_dirs = [output_path, tools_path]
+
 
 class Generator:
 
@@ -153,13 +170,15 @@ class Generator:
 
             for root, dirs, files in os.walk(path + os.path.sep):
 
-                for ignored_dir in ignored_dirs:
-                    if ignored_dir in dirs:
-                        dirs.remove(ignored_dir)
+                if ignored_dirs:
+                    for ignored_dir in ignored_dirs:
+                        if ignored_dir in dirs:
+                            dirs.remove(ignored_dir)
 
-                for ignored_file in ignored_files:
-                    if ignored_file in files:
-                        files.remove(ignored_file)
+                if ignored_files:
+                    for ignored_file in ignored_files:
+                        if ignored_file in files:
+                            files.remove(ignored_file)
 
                 zip.write(os.path.join(root))
 
@@ -262,6 +281,8 @@ class Generator:
                 # noinspection PyArgumentList
                 m = hashlib.md5(bytes(addons_xml, encoding='utf-8')).hexdigest()
 
+            m = m + '  ' + 'addons.xml'
+
             # save file
             self._save_file(m, file=output_path + "addons.xml.md5")
         except Exception as e:
@@ -348,13 +369,18 @@ if __name__ == "__main__":
     print('Repository bootstrapper script, version: {0}'.format(__version__))
 
     Generator()
+
     if copy_additional:
         Copier()
 
     print("Process completed")
 
     if ask_for_exit_input:
+
         try:
+
             input("Press enter to exit")
+
         except SyntaxError:
+
             pass
